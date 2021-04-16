@@ -1,5 +1,6 @@
 
 const https = require('https');
+const NotFoundError = require('../error/not-found-error');
 
 const sports = new Map();
 const events = new Map();
@@ -64,7 +65,7 @@ const getEvents = () =>
 
 const getEventsBySportId = (sportId) => {
   if (!sports.has(sportId)) {
-    throw new Error(`Sport with id: ${sportId} doesn't exit`);
+    throw new NotFoundError(`Sport with id: ${sportId} doesn't exit`);
   }
   return sports.get(sportId).comp.flatMap(({ events }) =>
     events.map(event => ({

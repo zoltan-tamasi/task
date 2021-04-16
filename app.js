@@ -13,6 +13,14 @@ const { sportsController, eventsController } = require('./controller/controller'
 app.use('/sports', sportsController);
 app.use('/events', eventsController);
 
+app.use((error, req, res, next) => {
+  console.error(error);
+  res.status(500).json({
+    success: false,
+    error: error.message
+  });
+});
+
 app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);
 });

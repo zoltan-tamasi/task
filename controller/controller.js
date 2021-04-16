@@ -29,7 +29,6 @@ eventsController.get('/:sportId', ({ params: { sportId }}, res) => {
     });
   } catch (error) {
     if (error instanceof NotFoundError) {
-      console.log('hllo')
       res.status(404).json({
         success: false,
         message: error.message

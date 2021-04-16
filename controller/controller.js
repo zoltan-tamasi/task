@@ -1,22 +1,27 @@
 
+const { Router } = require('express');
+
+const sportsController = Router();
+const eventsController = Router();
+
 let eventService;
 
-const getSportsController = (req, res) => {
+sportsController.get('/', (req, res) => {
   res.json(eventService.getSports());
-};
+});
 
-const getEventsController = ({ params: { sportId }}, res) => {
-  if (sportId) {
-    res.json(eventService.getEventsBySportId(parseInt(sportId)));
-  } else {
-    res.json(eventService.getEvents());
-  }
-};
+eventsController.get('/', (req, res) => {
+  res.json(eventService.getEvents());
+});
+
+eventsController.get('/:sportId', ({ params: { sportId }}, res) => {
+  res.json(eventService.getEventsBySportId(parseInt(sportId)));
+});
 
 module.exports = (_eventService) => {
   eventService = _eventService;
   return {
-    getSportsController,
-    getEventsController
+    sportsController,
+    eventsController
   };
 };

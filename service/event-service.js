@@ -6,7 +6,7 @@ const events = new Map();
 
 let eTag;
 
-const getData = ({ host, path }) => () => 
+const getData = ({ host, path }) => () =>
   new Promise((resolve, reject) => {
     https.get({
       protocol: 'https:',
@@ -49,28 +49,32 @@ const consumeData = (data) => {
   });
 };
 
-const getSports = () => 
+const getSports = () =>
   Array.from(sports.values()).map(({ desc, id }) => ({ desc, id }));
 
-const getEvents = () => 
+const getEvents = () =>
   Array.from(events.values()).map(event => {
-    return { 
-      desc: event.desc, 
+    return {
+      desc: event.desc,
       scr: (event.scoreboard && event.scoreboard.scrA)
         ? `${event.scoreboard.scrA}:${event.scoreboard.scrB}`
         : undefined
     };
   });
 
-const getEventsBySportId = (sportId) => 
-  sports.get(sportId).comp.flatMap(({ events }) =>
-    events.map(event => ({ 
-      desc: event.desc, 
+const getEventsBySportId = (sportId) => {
+  if (!sports.has(sportId)) {
+    throw new Error(`Sport with id: ${sportId} doesn't exit`);
+  }
+  return sports.get(sportId).comp.flatMap(({ events }) =>
+    events.map(event => ({
+      desc: event.desc,
       scr: (event.scoreboard && event.scoreboard.scrA)
         ? `${event.scoreboard.scrA}:${event.scoreboard.scrB}`
         : undefined
     }))
   );
+};
 
 module.exports = ({ host, path }) => {
   setInterval(getData({ host, path }), 5000);

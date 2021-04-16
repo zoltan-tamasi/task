@@ -2,6 +2,8 @@
 const https = require('https');
 
 const sports = new Map();
+const events = new Map();
+
 let eTag;
 
 const getData = ({ host, path }) => () => 
@@ -33,18 +35,47 @@ const getData = ({ host, path }) => () =>
       reject(err);
     });
   }).then(response => {
-    response.result.sports.forEach(sport => {
-      sports.set(sport.id, sport);
-    });
+    consumeData(response.result);
   });
 
+const consumeData = (data) => {
+  data.sports.forEach(sport => {
+    sports.set(sport.id, sport);
+    sport.comp.forEach(comp => {
+      comp.events.forEach(event => {
+        events.set(event.id, event);
+      });
+    })
+  });
+};
+
 const getSports = () => 
-  Array.from(sports.values()).map(({ desc }) => desc);
+  Array.from(sports.values()).map(({ desc, id }) => ({ desc, id }));
+
+const getEvents = () => 
+  Array.from(events.values()).map(event => {
+    return { 
+      desc: event.desc, 
+      scr: (event.scoreboard && event.scoreboard.scrA)
+        ? `${event.scoreboard.scrA}:${event.scoreboard.scrB}`
+        : undefined
+    };
+  });
+
+const getEventsBySportId = (sportId) => 
+  sports.get(sportId).comp.flatMap(({ events }) =>
+    events.map(event => ({ 
+      desc: event.desc, 
+      scr: (event.scoreboard && event.scoreboard.scrA)
+        ? `${event.scoreboard.scrA}:${event.scoreboard.scrB}`
+        : undefined
+    }))
+  );
 
 module.exports = ({ host, path }) => {
   setInterval(getData({ host, path }), 5000);
 
   return {
-    getSports,
+    getSports, getEvents, getEventsBySportId
   }
 };

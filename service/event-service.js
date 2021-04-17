@@ -2,6 +2,8 @@
 const https = require('https');
 const NotFoundError = require('../error/not-found-error');
 
+const READ_INTERVAL_MS = 5000;
+
 const sports = new Map();
 const events = new Map();
 const competitions = new Map();
@@ -10,7 +12,7 @@ let eTag;
 
 const sortByPos = ({ pos: posA }, { pos: posB }) => posA > posB;
 
-const getData = ({ host, path }) => () =>
+const getData = ({ host, path }) =>
   new Promise((resolve, reject) => {
     https.get({
       protocol: 'https:',
@@ -38,9 +40,14 @@ const getData = ({ host, path }) => () =>
     }).on("error", (err) => {
       reject(err);
     });
-  }).then(response => {
-    consumeData(response.result);
-  });
+  })
+    .then(response => {
+      consumeData(response.result);
+    })
+    .then(() => new Promise((resolve) => {
+      setTimeout(resolve, READ_INTERVAL_MS);
+    }))
+    .then(() => getData({ host, path }));
 
 const consumeData = (data) => {
   data.sports.forEach(sport => {
@@ -102,7 +109,10 @@ const getEventById = (eventId) => {
 };
 
 module.exports = ({ host, path }) => {
-  setInterval(getData({ host, path }), 5000);
+  getData({ host, path })
+    .catch(error => {
+      console.error(error);
+    });
 
   return {
     getSports, getEvents, getEventsBySportId, getEventById

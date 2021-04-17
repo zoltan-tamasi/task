@@ -7,14 +7,19 @@ const eventsController = Router();
 
 let eventService;
 
-sportsController.get('/', (req, res) => {
+const afterRefreshData = (req, res, next) =>
+  eventService.refreshData()
+    .then(next)
+    .catch(next);
+
+sportsController.get('/', afterRefreshData, (req, res) => {
   res.json({
     result: eventService.getSports(),
     success: true
   });
 });
 
-sportsController.get('/:sportId/events', ({ params: { sportId }}, res) => {
+sportsController.get('/:sportId/events', afterRefreshData, ({ params: { sportId }}, res) => {
   try {
     res.json({
       result: eventService.getEventsBySportId(parseInt(sportId)),
@@ -27,19 +32,19 @@ sportsController.get('/:sportId/events', ({ params: { sportId }}, res) => {
         message: error.message
       });
     } else {
-      throw error;
+      throw(error);
     }
   }
 });
 
-eventsController.get('/', (req, res) => {
+eventsController.get('/', afterRefreshData, (req, res) => {
   res.json({
     result: eventService.getEvents(),
     success: true
   });
 });
 
-eventsController.get('/:eventId', ({ params: { eventId }}, res) => {
+eventsController.get('/:eventId', afterRefreshData, ({ params: { eventId }}, res) => {
   try {
     res.json({
       result: eventService.getEventById(parseInt(eventId)),

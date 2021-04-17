@@ -2,17 +2,16 @@
 const https = require('https');
 const NotFoundError = require('../error/not-found-error');
 
-const READ_INTERVAL_MS = 5000;
-
 const sports = new Map();
 const events = new Map();
 const competitions = new Map();
 
 let eTag;
+let host, path;
 
 const sortByPos = ({ pos: posA }, { pos: posB }) => posA > posB;
 
-const getData = ({ host, path }) =>
+const refreshData = () =>
   new Promise((resolve, reject) => {
     https.get({
       protocol: 'https:',
@@ -32,6 +31,7 @@ const getData = ({ host, path }) =>
           resolve(JSON.parse(data));
           console.log('New data read');
         } else if (response.statusCode === 304) {
+          resolve(null);
           console.log('No new data');
         } else {
           reject(data);
@@ -42,12 +42,10 @@ const getData = ({ host, path }) =>
     });
   })
     .then(response => {
-      consumeData(response.result);
-    })
-    .then(() => new Promise((resolve) => {
-      setTimeout(resolve, READ_INTERVAL_MS);
-    }))
-    .then(() => getData({ host, path }));
+      if (response !== null) {
+        consumeData(response.result);
+      }
+    });
 
 const consumeData = (data) => {
   data.sports.forEach(sport => {
@@ -108,13 +106,12 @@ const getEventById = (eventId) => {
   return mapEventAllData(events.get(eventId));
 };
 
-module.exports = ({ host, path }) => {
-  getData({ host, path })
-    .catch(error => {
-      console.error(error);
-    });
+module.exports = ({ host: _host, path: _path }) => {
+
+  host = _host;
+  path = _path;
 
   return {
-    getSports, getEvents, getEventsBySportId, getEventById
-  }
+    getSports, getEvents, getEventsBySportId, getEventById, refreshData
+  };
 };

@@ -4,6 +4,7 @@ const NotFoundError = require('../error/not-found-error');
 
 const sports = new Map();
 const events = new Map();
+const competitions = new Map();
 
 let eTag;
 
@@ -43,7 +44,9 @@ const consumeData = (data) => {
   data.sports.forEach(sport => {
     sports.set(sport.id, sport);
     sport.comp.forEach(comp => {
+      competitions.set(comp.id, comp);
       comp.events.forEach(event => {
+        event.comp_id = comp.id;
         events.set(event.id, event);
       });
     })
@@ -57,6 +60,17 @@ const mapEvent = event => ({
     ? `${event.scoreboard.scrA}:${event.scoreboard.scrB}`
     : undefined
 });
+
+const mapEventAllData = event => ({
+  ...mapEvent(event),
+  oppADesc : event.oppADesc,
+  oppBDesc : event.oppBDesc,
+  time: new Date(event.time),
+  inPlay: event.inPlay,
+  sport: sports.get(event.sport_id).desc,
+  competition: competitions.get(event.comp_id).desc,
+});
+
 
 const getSports = () =>
   Array.from(sports.values()).map(({ desc, id }) => ({ desc, id }));
@@ -73,10 +87,17 @@ const getEventsBySportId = (sportId) => {
   );
 };
 
+const getEventById = (eventId) => {
+  if (!events.has(eventId)) {
+    throw new NotFoundError(`Event with id: ${eventId} doesn't exit`);
+  }
+  return mapEventAllData(events.get(eventId));
+};
+
 module.exports = ({ host, path }) => {
   setInterval(getData({ host, path }), 5000);
 
   return {
-    getSports, getEvents, getEventsBySportId
+    getSports, getEvents, getEventsBySportId, getEventById
   }
 };

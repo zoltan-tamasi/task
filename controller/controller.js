@@ -14,6 +14,24 @@ sportsController.get('/', (req, res) => {
   });
 });
 
+sportsController.get('/:sportId/events', ({ params: { sportId }}, res) => {
+  try {
+    res.json({
+      result: eventService.getEventsBySportId(parseInt(sportId)),
+      success: true
+    });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({
+        success: false,
+        message: error.message
+      });
+    } else {
+      throw error;
+    }
+  }
+});
+
 eventsController.get('/', (req, res) => {
   res.json({
     result: eventService.getEvents(),
@@ -21,10 +39,10 @@ eventsController.get('/', (req, res) => {
   });
 });
 
-eventsController.get('/:sportId', ({ params: { sportId }}, res) => {
+eventsController.get('/:eventId', ({ params: { eventId }}, res) => {
   try {
     res.json({
-      result: eventService.getEventsBySportId(parseInt(sportId)),
+      result: eventService.getEventById(parseInt(eventId)),
       success: true
     });
   } catch (error) {

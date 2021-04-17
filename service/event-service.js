@@ -8,6 +8,8 @@ const competitions = new Map();
 
 let eTag;
 
+const sortByPos = ({ pos: posA }, { pos: posB }) => posA > posB;
+
 const getData = ({ host, path }) => () =>
   new Promise((resolve, reject) => {
     https.get({
@@ -53,12 +55,17 @@ const consumeData = (data) => {
   });
 };
 
+const mapSport = sport => ({
+  id: sport.id,
+  desc: sport.desc,
+});
+
 const mapEvent = event => ({
   id: event.id,
   desc: event.desc,
   scr: (event.scoreboard && event.scoreboard.scrA)
     ? `${event.scoreboard.scrA}:${event.scoreboard.scrB}`
-    : undefined
+    : undefined,
 });
 
 const mapEventAllData = event => ({
@@ -73,17 +80,17 @@ const mapEventAllData = event => ({
 
 
 const getSports = () =>
-  Array.from(sports.values()).map(({ desc, id }) => ({ desc, id }));
+  Array.from(sports.values()).sort(sortByPos).map(mapSport);
 
 const getEvents = () =>
-  Array.from(events.values()).map(mapEvent);
+  Array.from(events.values()).sort(sortByPos).map(mapEvent);
 
 const getEventsBySportId = (sportId) => {
   if (!sports.has(sportId)) {
     throw new NotFoundError(`Sport with id: ${sportId} doesn't exit`);
   }
   return sports.get(sportId).comp.flatMap(({ events }) =>
-    events.map(mapEvent)
+    events.sort(sortByPos).map(mapEvent)
   );
 };
 

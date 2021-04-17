@@ -50,30 +50,26 @@ const consumeData = (data) => {
   });
 };
 
+const mapEvent = event => ({
+  id: event.id,
+  desc: event.desc,
+  scr: (event.scoreboard && event.scoreboard.scrA)
+    ? `${event.scoreboard.scrA}:${event.scoreboard.scrB}`
+    : undefined
+});
+
 const getSports = () =>
   Array.from(sports.values()).map(({ desc, id }) => ({ desc, id }));
 
 const getEvents = () =>
-  Array.from(events.values()).map(event => {
-    return {
-      desc: event.desc,
-      scr: (event.scoreboard && event.scoreboard.scrA)
-        ? `${event.scoreboard.scrA}:${event.scoreboard.scrB}`
-        : undefined
-    };
-  });
+  Array.from(events.values()).map(mapEvent);
 
 const getEventsBySportId = (sportId) => {
   if (!sports.has(sportId)) {
     throw new NotFoundError(`Sport with id: ${sportId} doesn't exit`);
   }
   return sports.get(sportId).comp.flatMap(({ events }) =>
-    events.map(event => ({
-      desc: event.desc,
-      scr: (event.scoreboard && event.scoreboard.scrA)
-        ? `${event.scoreboard.scrA}:${event.scoreboard.scrB}`
-        : undefined
-    }))
+    events.map(mapEvent)
   );
 };
 

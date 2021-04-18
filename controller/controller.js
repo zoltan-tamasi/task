@@ -15,6 +15,23 @@ const afterRefreshData = (req, res, next) => {
     .catch(next);
 }
 
+const afterRefreshAllData = (req, res, next) => {
+  Promise.all(
+    eventService.SUPPORTED_LANGUAGE_CODES.map(languageCode =>
+      eventService.refreshData(languageCode)
+    )
+  )
+    .then(() => next())
+    .catch(next);
+};
+
+sportsController.get('/all-languages', afterRefreshAllData, (req, res) => {
+  res.json({
+    result: eventService.getSportsAllLanguages(),
+    success: true
+  });
+});
+
 sportsController.get('/', afterRefreshData, (req, res) => {
   res.json({
     result: eventService.getSports(res.locals.languageCode),

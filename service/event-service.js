@@ -97,9 +97,27 @@ const mapEventAllData = (event, languageCode) => ({
   competition: competitions.get(languageCode).get(event.comp_id).desc,
 });
 
-
 const getSports = (languageCode) =>
   Array.from(sports.get(languageCode).values()).sort(sortByPos).map(mapSport);
+
+const getSportsAllLanguages = () => {
+  const sportsInAllLanguages = new Map();
+    SUPPORTED_LANGUAGE_CODES
+      .forEach(languageCode =>
+        Array.from(sports.get(languageCode).values())
+          .sort(sortByPos)
+          .forEach(({ id, desc }) => {
+            if (!sportsInAllLanguages.has(id)) {
+              sportsInAllLanguages.set(id, {});
+            }
+            sportsInAllLanguages.get(id)[languageCode] = desc;
+          })
+      );
+  return Array.from(sportsInAllLanguages.entries()).map(([id, descriptions]) => ({
+    id,
+    ...descriptions
+  }));
+}
 
 const getEvents = (languageCode) =>
   Array.from(events.get(languageCode).values()).sort(sortByPos).map(mapEvent);
@@ -129,7 +147,7 @@ module.exports = ({ host: _host, path: _path }) => {
   path = _path;
 
   return {
-    getSports, getEvents, getEventsBySportId, getEventById, refreshData,
-    getLanguageFromHeader
+    getSports, getSportsAllLanguages, getEvents, getEventsBySportId, getEventById, refreshData,
+    getLanguageFromHeader, SUPPORTED_LANGUAGE_CODES
   };
 };

@@ -6,22 +6,26 @@ const sports = new Map();
 const events = new Map();
 const competitions = new Map();
 
-let eTag;
+const eTagByLanguage = {};
+
+const SUPPORTED_LANGUAGE_CODES = ['en', 'de', 'zh'];
+
 let host, path;
 
 const sortByPos = ({ pos: posA }, { pos: posB }) => posA > posB;
 
-const refreshData = () =>
-  new Promise((resolve, reject) => {
+const refreshData = (languageCode) => {
+  const eTag = eTagByLanguage[languageCode];
+  return new Promise((resolve, reject) => {
     https.get({
       protocol: 'https:',
       headers: eTag ? {
         'If-None-Match': eTag,
       } : {},
       host,
-      path
+      path: path(languageCode)
     }, response => {
-      eTag = response.headers.etag;
+      eTagByLanguage[languageCode] = response.headers.etag;
       let data = '';
       response.on('data', (chunk) => {
         data += chunk;
@@ -43,18 +47,28 @@ const refreshData = () =>
   })
     .then(response => {
       if (response !== null) {
-        consumeData(response.result);
+        consumeData(response.result, languageCode);
       }
     });
+};
 
-const consumeData = (data) => {
+const consumeData = (data, languageCode) => {
+  if (!sports.has(languageCode)) {
+    sports.set(languageCode, new Map());
+  }
+  if (!competitions.has(languageCode)) {
+    competitions.set(languageCode, new Map());
+  }
+  if (!events.has(languageCode)) {
+    events.set(languageCode, new Map());
+  }
   data.sports.forEach(sport => {
-    sports.set(sport.id, sport);
+    sports.get(languageCode).set(sport.id, sport);
     sport.comp.forEach(comp => {
-      competitions.set(comp.id, comp);
+      competitions.get(languageCode).set(comp.id, comp);
       comp.events.forEach(event => {
         event.comp_id = comp.id;
-        events.set(event.id, event);
+        events.get(languageCode).set(event.id, event);
       });
     })
   });
@@ -73,38 +87,41 @@ const mapEvent = event => ({
     : undefined,
 });
 
-const mapEventAllData = event => ({
+const mapEventAllData = (event, languageCode) => ({
   ...mapEvent(event),
   oppADesc : event.oppADesc,
   oppBDesc : event.oppBDesc,
   time: new Date(event.time),
   inPlay: event.inPlay,
-  sport: sports.get(event.sport_id).desc,
-  competition: competitions.get(event.comp_id).desc,
+  sport: sports.get(languageCode).get(event.sport_id).desc,
+  competition: competitions.get(languageCode).get(event.comp_id).desc,
 });
 
 
-const getSports = () =>
-  Array.from(sports.values()).sort(sortByPos).map(mapSport);
+const getSports = (languageCode) =>
+  Array.from(sports.get(languageCode).values()).sort(sortByPos).map(mapSport);
 
-const getEvents = () =>
-  Array.from(events.values()).sort(sortByPos).map(mapEvent);
+const getEvents = (languageCode) =>
+  Array.from(events.get(languageCode).values()).sort(sortByPos).map(mapEvent);
 
-const getEventsBySportId = (sportId) => {
-  if (!sports.has(sportId)) {
+const getEventsBySportId = (sportId, languageCode) => {
+  if (!sports.get(languageCode).has(sportId)) {
     throw new NotFoundError(`Sport with id: ${sportId} doesn't exit`);
   }
-  return sports.get(sportId).comp.flatMap(({ events }) =>
+  return sports.get(languageCode).get(sportId).comp.flatMap(({ events }) =>
     events.sort(sortByPos).map(mapEvent)
   );
 };
 
-const getEventById = (eventId) => {
-  if (!events.has(eventId)) {
+const getEventById = (eventId, languageCode) => {
+  if (!events.get(languageCode).has(eventId)) {
     throw new NotFoundError(`Event with id: ${eventId} doesn't exit`);
   }
-  return mapEventAllData(events.get(eventId));
+  return mapEventAllData(events.get(languageCode).get(eventId), languageCode);
 };
+
+const getLanguageFromHeader = (languageCodeHeader) =>
+  SUPPORTED_LANGUAGE_CODES.includes(languageCodeHeader) ? languageCodeHeader : 'en';
 
 module.exports = ({ host: _host, path: _path }) => {
 
@@ -112,6 +129,7 @@ module.exports = ({ host: _host, path: _path }) => {
   path = _path;
 
   return {
-    getSports, getEvents, getEventsBySportId, getEventById, refreshData
+    getSports, getEvents, getEventsBySportId, getEventById, refreshData,
+    getLanguageFromHeader
   };
 };

@@ -7,14 +7,18 @@ const eventsController = Router();
 
 let eventService;
 
-const afterRefreshData = (req, res, next) =>
-  eventService.refreshData()
+const afterRefreshData = (req, res, next) => {
+  const headers = req.headers;
+  const languageCode = eventService.getLanguageFromHeader(headers['accept-language']);
+  res.locals.languageCode = languageCode;
+  eventService.refreshData(languageCode)
     .then(next)
     .catch(next);
+}
 
 sportsController.get('/', afterRefreshData, (req, res) => {
   res.json({
-    result: eventService.getSports(),
+    result: eventService.getSports(res.locals.languageCode),
     success: true
   });
 });
@@ -22,7 +26,7 @@ sportsController.get('/', afterRefreshData, (req, res) => {
 sportsController.get('/:sportId/events', afterRefreshData, ({ params: { sportId }}, res) => {
   try {
     res.json({
-      result: eventService.getEventsBySportId(parseInt(sportId)),
+      result: eventService.getEventsBySportId(parseInt(sportId), res.locals.languageCode),
       success: true
     });
   } catch (error) {
@@ -39,7 +43,7 @@ sportsController.get('/:sportId/events', afterRefreshData, ({ params: { sportId 
 
 eventsController.get('/', afterRefreshData, (req, res) => {
   res.json({
-    result: eventService.getEvents(),
+    result: eventService.getEvents(res.locals.languageCode),
     success: true
   });
 });
@@ -47,7 +51,7 @@ eventsController.get('/', afterRefreshData, (req, res) => {
 eventsController.get('/:eventId', afterRefreshData, ({ params: { eventId }}, res) => {
   try {
     res.json({
-      result: eventService.getEventById(parseInt(eventId)),
+      result: eventService.getEventById(parseInt(eventId), res.locals.languageCode),
       success: true
     });
   } catch (error) {

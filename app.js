@@ -2,7 +2,7 @@
 const express = require('express');
 
 const API_HOST = 'partners.betvictor.mobi';
-const API_PATH = '/en-gb/in-play/1/events';
+const API_PATH = (languageCode) => `/${languageCode}/in-play/1/events`;
 
 const app = express();
 const port = 3000;

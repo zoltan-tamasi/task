@@ -1,6 +1,5 @@
 
 const { Router } = require('express');
-const NotFoundError = require('../error/not-found-error');
 
 const sportsController = Router();
 const eventsController = Router();
@@ -24,21 +23,10 @@ sportsController.get('/', afterRefreshData, (req, res) => {
 });
 
 sportsController.get('/:sportId/events', afterRefreshData, ({ params: { sportId }}, res) => {
-  try {
-    res.json({
-      result: eventService.getEventsBySportId(parseInt(sportId), res.locals.languageCode),
-      success: true
-    });
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({
-        success: false,
-        message: error.message
-      });
-    } else {
-      throw(error);
-    }
-  }
+  res.json({
+    result: eventService.getEventsBySportId(parseInt(sportId), res.locals.languageCode),
+    success: true
+  });
 });
 
 eventsController.get('/', afterRefreshData, (req, res) => {
@@ -49,21 +37,10 @@ eventsController.get('/', afterRefreshData, (req, res) => {
 });
 
 eventsController.get('/:eventId', afterRefreshData, ({ params: { eventId }}, res) => {
-  try {
-    res.json({
-      result: eventService.getEventById(parseInt(eventId), res.locals.languageCode),
-      success: true
-    });
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      res.status(404).json({
-        success: false,
-        message: error.message
-      });
-    } else {
-      throw error;
-    }
-  }
+  res.json({
+    result: eventService.getEventById(parseInt(eventId), res.locals.languageCode),
+    success: true
+  });
 });
 
 module.exports = (_eventService) => {

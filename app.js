@@ -9,8 +9,9 @@ const API_PATH = (languageCode) => `/${languageCode}/in-play/1/events`;
 const app = express();
 const port = 3000;
 
-const eventService = require('./service/event-service')({ host: API_HOST, path: API_PATH });
-const { sportsController, eventsController } = require('./controller/controller')(eventService);
+const dataSource = require('./service/data-source')({ host: API_HOST, path: API_PATH });
+const eventService = require('./service/event-service')(dataSource);
+const { sportsController, eventsController } = require('./controller/controller')(eventService, dataSource);
 
 app.use('/sports', sportsController);
 app.use('/events', eventsController);

@@ -4,13 +4,13 @@ const { Router } = require('express');
 const sportsController = Router();
 const eventsController = Router();
 
-let eventService;
+let eventService, dataSource;
 
 const afterRefreshData = (req, res, next) => {
   const headers = req.headers;
   const languageCode = eventService.getLanguageFromHeader(headers['accept-language']);
   res.locals.languageCode = languageCode;
-  eventService.refreshData(languageCode)
+  dataSource.refreshData(languageCode)
     .then(next)
     .catch(next);
 }
@@ -18,7 +18,7 @@ const afterRefreshData = (req, res, next) => {
 const afterRefreshAllData = (req, res, next) => {
   Promise.all(
     eventService.SUPPORTED_LANGUAGE_CODES.map(languageCode =>
-      eventService.refreshData(languageCode)
+      dataSource.refreshData(languageCode)
     )
   )
     .then(() => next())
@@ -60,8 +60,9 @@ eventsController.get('/:eventId', afterRefreshData, ({ params: { eventId }}, res
   });
 });
 
-module.exports = (_eventService) => {
+module.exports = (_eventService, _dataSource) => {
   eventService = _eventService;
+  dataSource = _dataSource;
   return {
     sportsController,
     eventsController

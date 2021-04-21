@@ -15,7 +15,7 @@ npm run test
 
 Get sports
 ```
-$ curl localhost:3000/sports
+curl localhost:3000/sports
 ```
 Gets events for sport
 ```
@@ -35,5 +35,5 @@ curl localhost:3000/sports/all-languages
 ```
 Using language header
 ```
-$ curl -H 'accept-language: de' localhost:3000/sports
+curl -H 'accept-language: de' localhost:3000/sports
 ```

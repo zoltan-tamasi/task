@@ -28,6 +28,7 @@ const mapEventAllData = (event, languageCode) => ({
   inPlay: event.inPlay,
   sport: dataSource.getSports(languageCode).get(event.sport_id).desc,
   competition: dataSource.getCompetitions(languageCode).get(event.comp_id).desc,
+  ...event
 });
 
 const getSports = (languageCode) =>

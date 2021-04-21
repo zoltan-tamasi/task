@@ -40,12 +40,18 @@ const refreshData = (languageCode) => {
   })
     .then(response => {
       if (response !== null) {
-        consumeData(response.result, languageCode);
+        consumeData({ 
+          data: response.result, 
+          languageCode,
+          sports, 
+          competitions,
+          events
+        });
       }
     });
 };
 
-const consumeData = (data, languageCode) => {
+const consumeData = ({ data, languageCode, sports, competitions, events }) => {
   if (!sports.has(languageCode)) {
     sports.set(languageCode, new Map());
   }
@@ -82,7 +88,7 @@ module.exports = ({ host: _host, path: _path }) => {
   path = _path;
 
   return {
-    getSports, getEvents, getCompetitions, refreshData,
+    getSports, getEvents, getCompetitions, refreshData, consumeData
   };
 };
 
